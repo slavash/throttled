@@ -6,7 +6,7 @@ import (
 	"net"
 )
 
-// LimitedConnection decorate the net.Conn with throtlong functionality
+// LimitedConnection decorate the net.Conn with throttling functionality
 type LimitedConnection struct {
 	net.Conn
 	listener *Listener
@@ -14,17 +14,17 @@ type LimitedConnection struct {
 	ctx      context.Context
 }
 
-// SetLimit  sets connection limit
+// SetLimit sets connection limit
 func (lc *LimitedConnection) SetLimit(bytesPerSec int) {
 	if bytesPerSec > 0 {
+		limiter := rate.NewLimiter(rate.Limit(bytesPerSec), 32768)
 		lc.listener.limits.connection = bytesPerSec
-		lc.limiter = rate.NewLimiter(rate.Limit(bytesPerSec), 32768)
+		lc.limiter = limiter
 	}
 }
 
 // Write adds throttling functionality to net.Conn.Write
 func (lc LimitedConnection) Write(b []byte) (n int, err error) {
-
 	if lc.limiter == nil && lc.listener.limiter == nil {
 		return lc.Conn.Write(b)
 	}
@@ -37,7 +37,6 @@ func (lc LimitedConnection) Write(b []byte) (n int, err error) {
 	if err = lc.limiter.WaitN(lc.ctx, n); err != nil {
 		return n, err
 	}
-
 	if err = lc.listener.limiter.WaitN(lc.ctx, n); err != nil {
 		return n, err
 	}

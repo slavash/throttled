@@ -1,4 +1,4 @@
-module bitbucket.remedypartners.com/db/throttled
+module github.com/slavas/throttled
 
 go 1.12
 
