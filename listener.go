@@ -2,9 +2,10 @@ package throttled
 
 import (
 	"context"
-	"golang.org/x/time/rate"
 	"net"
 	"sync"
+
+	"golang.org/x/time/rate"
 )
 
 // Listener net.Listener decorator
@@ -19,6 +20,7 @@ type Listener struct {
 	ctx     context.Context
 }
 
+// NewListener create ne instance of the listener without limits
 func NewListener(l net.Listener) *Listener {
 	return &Listener{
 		Listener: l,

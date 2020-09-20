@@ -2,8 +2,9 @@ package throttled
 
 import (
 	"context"
-	"golang.org/x/time/rate"
 	"net"
+
+	"golang.org/x/time/rate"
 )
 
 // LimitedConnection decorate the net.Conn with throttling functionality
