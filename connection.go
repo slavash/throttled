@@ -10,7 +10,7 @@ import (
 type LimitedConnection struct {
 	net.Conn
 	listener *Listener
-	connLim  *rate.Limiter
+	limiter  *rate.Limiter
 	ctx      context.Context
 }
 
@@ -18,14 +18,14 @@ type LimitedConnection struct {
 func (lc *LimitedConnection) SetLimit(bytesPerSec int) {
 	if bytesPerSec > 0 {
 		lc.listener.limits.connection = bytesPerSec
-		lc.connLim = rate.NewLimiter(rate.Limit(bytesPerSec), 32768)
+		lc.limiter = rate.NewLimiter(rate.Limit(bytesPerSec), 32768)
 	}
 }
 
 // Write adds throttling functionality to net.Conn.Write
 func (lc LimitedConnection) Write(b []byte) (n int, err error) {
 
-	if lc.connLim == nil && lc.listener.limiter == nil {
+	if lc.limiter == nil && lc.listener.limiter == nil {
 		return lc.Conn.Write(b)
 	}
 
@@ -34,7 +34,7 @@ func (lc LimitedConnection) Write(b []byte) (n int, err error) {
 		return n, err
 	}
 
-	if err = lc.connLim.WaitN(lc.ctx, n); err != nil {
+	if err = lc.limiter.WaitN(lc.ctx, n); err != nil {
 		return n, err
 	}
 
